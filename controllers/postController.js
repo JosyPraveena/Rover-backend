@@ -53,13 +53,17 @@ console.log(req.body)
   } = req.body;
 
   const update = {
+   "$set":{
     post_description,
     // post_title,
     // city,
     // place,
     // view,
-    // images,
+    images,
+   }
   };
+
+  if (!images || !images.length) delete update.images
 
   await Post.findByIdAndUpdate(id, update);
   res.status(200).send('Yay')
