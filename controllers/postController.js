@@ -46,24 +46,26 @@ console.log(req.body)
 
   const {
     post_description,
-    // post_title,
-    // city,
-    // place,
-    // view,
+    post_title,
+    city,
+    place,
+    view,
   } = req.body;
+
+  const currentPost = await Post.findById(id);
+
+  console.log(images)
 
   const update = {
    "$set":{
-    post_description,
+    post_description: post_description || currentPost.post_description,
     // post_title,
     // city,
     // place,
     // view,
-    images,
+    images: images.length ? [...currentPost.images, ...images] : currentPost.images,
    }
   };
-
-  if (!images || !images.length) delete update.images
 
   await Post.findByIdAndUpdate(id, update);
   res.status(200).send('Yay')
@@ -71,7 +73,7 @@ console.log(req.body)
 
    // get all posts
    exports.get_all_posts = async(req,res) =>{
-       Post.find().sort({post_data: -1})  
+       Post.find().sort({post_date: -1})  
        .then(data => res.json(data))
        .catch(err => console.error(err))
    }

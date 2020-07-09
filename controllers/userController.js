@@ -14,7 +14,9 @@ exports.create_user = async (req, res) => {
   });
 
   await user.save();
-
+  const token = user.createToken()
+  res.set('Access-Control-Expose-Headers', 'x-authorization-token')
+  res.set('x-authorization-token',token)
   res.send({
     _id: user._id,
     email: user.email,
@@ -30,10 +32,8 @@ exports.getUsers = async (req, res) => {
 
 exports.getme = async (req, res) => {
   const { _id } = req.user;
-
-  console.log("*****")
   User.findById(_id)
-    .populate("posts")
+    .populate("posts").sort({post_date: -1})
     .then((data) => res.json(data))
     .catch((err) => console.error(err));
 };
