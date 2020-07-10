@@ -55,6 +55,7 @@ console.log(req.body)
   const currentPost = await Post.findById(id);
 
   console.log(images)
+  console.log(images.length)
 
   const update = {
    "$set":{
