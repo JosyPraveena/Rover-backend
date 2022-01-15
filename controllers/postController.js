@@ -1,38 +1,54 @@
-const Post = require('../database/models/post')
-const User = require('../database/models/user')
+const Post = require("../database/models/post");
+const User = require("../database/models/user");
 
-exports.create_post = async (req,res) =>{
+exports.create_post = async (req, res) => {
+  const { _id, user_name } = req.user;
+  const { files, fileValidationError } = req;
+  console.log(req.user);
 
+  // if (!files || !files.length) {
+  //     return res.status(400).send('Please upload some files');
+  //   }
+  if (fileValidationError) {
+    return res.status(400).send(fileValidationError);
+  }
 
-    const {_id, user_name} = req.user
-    const { files, fileValidationError } = req
-    console.log(req.user)
-    
-    // if (!files || !files.length) {
-    //     return res.status(400).send('Please upload some files');
-    //   }
-      if (fileValidationError) {
-        return res.status(400).send(fileValidationError);
-      }
+  const imagesdata = files.map((file) => {
+    return { name: file.originalname, path: `/uploads/${file.filename}` };
+  });
 
-const imagesdata = files.map(file =>  {return {'name':  file.originalname, 'path':  `/uploads/${file.filename}`}})
-
-    const {post_description,post_title,lat,lng,city,place,view} = req.body
-    let post = await new Post ({post_description,post_title,location:{coordinates:[lat, lng]},location:{city:city},location:{place:place},images:imagesdata,view:view,username:user_name});
-    await post.save()
-    const filter = {_id}
-    const update = {$push: {posts:post._id}}
-    await User.findOneAndUpdate(filter,update)
-   res.send({
-        post
-    })
-
-}
+  const {
+    post_description,
+    post_title,
+    lat,
+    lng,
+    city,
+    place,
+    view,
+  } = req.body;
+  let post = await new Post({
+    post_description,
+    post_title,
+    location: { coordinates: [lat, lng] },
+    location: { city: city },
+    location: { place: place },
+    images: imagesdata,
+    view: view,
+    username: user_name,
+  });
+  await post.save();
+  const filter = { _id };
+  const update = { $push: { posts: post._id } };
+  await User.findOneAndUpdate(filter, update);
+  res.send({
+    post,
+  });
+};
 
 //Update post - POST
 
 exports.edit_post = async (req, res) => {
-console.log(req.body)
+  console.log(req.body);
   const { id } = req.params;
 
   const { files, fileValidationError } = req;
@@ -44,46 +60,52 @@ console.log(req.body)
     return { name: file.originalname, path: `/uploads/${file.filename}` };
   });
 
-  const {
-    post_description,
-    post_title,
-    city,
-    place,
-    view,
-  } = req.body;
+  const { post_description, post_title, city, place, view } = req.body;
 
   const currentPost = await Post.findById(id);
 
-  console.log(images)
-  console.log(images.length)
+  console.log(images);
+  console.log(images.length);
 
   const update = {
-   "$set":{
-    post_description: post_description || currentPost.post_description,
-    // post_title,
-    // city,
-    // place,
-    // view,
-    images: images.length ? [...currentPost.images, ...images] : currentPost.images,
-   }
+    $set: {
+      post_description: post_description || currentPost.post_description,
+      // post_title,
+      // city,
+      // place,
+      // view,
+      images: images.length
+        ? [...currentPost.images, ...images]
+        : currentPost.images,
+    },
   };
 
   await Post.findByIdAndUpdate(id, update);
-  res.status(200).send('Yay')
+  res.status(200).send("Yay");
 };
 
-   // get all posts
-   exports.get_all_posts = async(req,res) =>{
-       Post.find().sort({post_date: -1})  
-       .then(data => res.json(data))
-       .catch(err => console.error(err))
-   }
+// get all posts
+exports.get_all_posts = async (req, res) => {
+  Post.find()
+    .sort({ post_date: -1 })
+    .then((data) => res.json(data))
+    .catch((err) => console.error(err));
+};
 
-   //get single post
+//get single post
 
-   exports.get_one_post = async(req,res) =>{
-    const {id} =req.params
-    Post.findById(id)
-    .then(data => res.json(data))
-  .catch(err => console.error(err))
-   }
+exports.get_one_post = async (req, res) => {
+  const { id } = req.params;
+  Post.findById(id)
+    .then((data) => res.json(data))
+    .catch((err) => console.error(err));
+};
+
+//delete a post
+
+exports.delete_one_post = async (req, res) => {
+  const { id } = req.params;
+  Post.findByIdAndDelete(id)
+  .then((data) => res.json(data))
+  .catch((err) => console.error(err));
+};
